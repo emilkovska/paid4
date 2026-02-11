@@ -1,0 +1,31 @@
+Package: paid4
+Title: Practical Application to Include future Disease costs (PAID) 4.0
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Elena", "Milkovska", , "milkovska@eshpm.eur.nl", role = c("aut", "cre")),
+    person("Pieter", "van Baal", , "vanbaal@eshpm.eur.nl", role = "aut")
+  )
+Description: PAID 4.0 is a toolkit that enables researchers to incorporate
+    future unrelated medical costs and future non-medical costs in their
+    economic evaluations.  Users can specify various aspects of their
+    intervention to then receive case-specific future unrelated medical
+    costs and future non-medical costs.
+License: MIT + file LICENSE
+Depends: 
+    R (>= 3.5)
+Imports: 
+    dplyr,
+    stats,
+    magrittr,
+    mgcv,
+    stringr,
+    tidyr
+Suggests: 
+    readxl,
+    rjson,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
