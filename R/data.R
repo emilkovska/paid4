@@ -22,11 +22,11 @@
 
 #' A list of diseases that can be excluded from the estimates
 #'
-#' Only important for countries that have a cost of illness study - Netherlands
-#' and Germany. `mapping[[country]]` displays a data frame listing all diseases
-#' that comprise the cost estimates and show what their corresponding groups
-#' are. To be used as guidance for `related.diseases` option of the `paid`
-#' function.
+#' Only important for countries that have a cost of illness study - Netherlands,
+#' Germany, and France. `paid4::mapping[[country]][[coi.year]]` displays a data frame
+#' listing all diseases that comprise the cost estimates and show what their
+#' corresponding groups are. To be used as guidance for `related.diseases`
+#' option of the `paid` function.
 #'
 #' @source PAID 4.0 tool
 #' @format list of data frames for each country
