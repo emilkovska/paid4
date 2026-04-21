@@ -7,10 +7,11 @@
 #' @param user.diseases a data.frame of related diseases. See `related.diseases`in the main function pai4::paid
 #'
 #' @export
-renderUnrelSCDC <- function(country, user.providers, user.diseases) {
+renderUnrelSCDC <- function(country, user.providers, user.diseases, coi.year) {
 
   # Setup
-  map <- mapping[[country]]
+  map <- mapping[[country]][[paste(coi.year)]]
+
 
   if (country=="Germany") {
     names(map) <- c("code","group","chapter","description","header","tree")
@@ -60,9 +61,14 @@ renderUnrelSCDC <- function(country, user.providers, user.diseases) {
 
     # Get 1-p(x,y,z|d=1,a,s) - probability to NOT die of either related diseases conditional on death at age a
     # Select only those diseases that have cause of death coded
-    disnames <- related.dis[related.dis %in% colnames(probCause)]
-
+    
+    disnames <- apply(sapply(related.dis, function(x) {grepl(x,colnames(probCause))}), 2, function(xx) {colnames(probCause)[xx]} )
+    if (is.list(disnames)) {
+      disnames <- do.call(c,disnames)
+    } 
+    disnames <- unique(disnames)
     p_x      <- as.matrix(probCause[,disnames])
+    p_x      <- apply(p_x[,,drop = FALSE],2,as.numeric)
     p_x      <- rowSums(p_x[,,drop=FALSE], na.rm = TRUE)
     p_nox   <- 1-p_x
     p_nox   <- cbind(x_0 = p_nox,
@@ -75,14 +81,17 @@ renderUnrelSCDC <- function(country, user.providers, user.diseases) {
 
   for (j in user.providers) {
 
-    sc  <- scdc[[country]][["SC"]][[j]]
-    dc  <- scdc[[country]][["DC"]][[j]]
+
+    sc  <- scdc[[country]][[paste(coi.year)]][["SC"]][[j]]
+    dc  <- scdc[[country]][[paste(coi.year)]][["DC"]][[j]]
+
 
     if (any(user.diseases$bool==FALSE)) {
-
-      AC  <- ac[[country]][[j]]
-      R   <- notratios[[country]][[j]]
+ 
+      AC  <- ac[[country]][[paste(coi.year)]][[j]]
+      R   <- notratios[[country]][[paste(coi.year)]][["Deterministic"]][[j]]
       R   <- R[,-c(1,2)]
+      rownames(R) <- NULL
 
       # Expand the frames
       sc      <- sc[,rep(1:3,each= 5)]
@@ -92,7 +101,7 @@ renderUnrelSCDC <- function(country, user.providers, user.diseases) {
       R_nox <- lapply(related.chapter, FUN = function(x) {R[,grepl(x,names(R))]})
       R_nox <- do.call(cbind,R_nox)
       # Get weights for R(NOX)
-      wR_nox <- as.matrix(1-probChapters[,related.chapter])
+      wR_nox <- as.matrix(1-apply(probChapters[,related.chapter, drop = FALSE],2,as.numeric))
       wR_nox <- wR_nox / rowSums(wR_nox[,,drop=FALSE])
       wR_nox <- wR_nox[,rep(1:length(related.chapter), each = 15)]
       # Get weighted R(NOX)
@@ -130,13 +139,13 @@ renderUnrelSCDC <- function(country, user.providers, user.diseases) {
 
       # Ensure no negatives
       sc_unrel <- f.replacespecial(sc_unrel, repif = 0)
-      sc_unrel <- sc_unrel[,c(1,3,2)]
+#      sc_unrel <- sc_unrel[,c(1,3,2)]
       colnames(sc_unrel) <- c("mean","lower","upper")
 
       # At older ages the probability to die in the text five years is close to 1, meaning that sc_unrel costs will be inflated exponentially because
       # (1-rowSums(probAll, na.rm = TRUE)) --> 0
       # Since we assume that all die after 100, survivor costs after 95 do not matter, as they are never used for the LHCE calculation, setting them to 0
-      sc_unrel[c(97:101,97:101+101),] <- 0
+#      sc_unrel[c(97:101,97:101+101),] <- 0
 
       sc_unrel <- as.matrix(sc_unrel)
       sc       <- as.matrix(sc[,c("mean","lower","upper")])
@@ -174,14 +183,17 @@ renderUnrelSCDC <- function(country, user.providers, user.diseases) {
 #'
 #' @return list
 #' @export
-renderLHCE <- function(country, user.providers, user.diseases, disc_percentage, user.uploaded) {
-
+renderLHCE <- function(country, user.providers, user.diseases, disc_percentage, user.uploaded, coi.year ) {
   # Render unrelated dc and sc costs
-  unrel          <- renderUnrelSCDC(country = country, user.providers = user.providers, user.diseases = user.diseases)
+  
+  #browser()
+  
+  unrel          <- renderUnrelSCDC(country = country, user.providers = user.providers, 
+                                    user.diseases = user.diseases, coi.year = coi.year)
   sc             <- as.matrix(unrel[["sc"]])
   dc             <- as.matrix(unrel[["dc"]])
   rm(unrel)
-
+  
   var.vec <- c("mean","lower","upper")
 
   sex  <- list(1:101,102:202)
@@ -190,6 +202,7 @@ renderLHCE <- function(country, user.providers, user.diseases, disc_percentage, 
   dc[c(100,201),!(grepl("_0",colnames(dc)) | grepl("_1",colnames(dc)))] <- NA
   dc[c(99,200),!(grepl("_0",colnames(dc)) | grepl("_1",colnames(dc)) | grepl("_2",colnames(dc)))] <- NA
   dc[c(98,199), grepl("_4",colnames(dc))] <- NA
+  v.disc  <- f.discount(x = disc_percentage)
 
   for (v in var.vec) {
     for (s in 1:2) {
@@ -197,7 +210,8 @@ renderLHCE <- function(country, user.providers, user.diseases, disc_percentage, 
         lastrow <- switch(paste(s), "1" = 101, "2" = 202)
         j       <- switch(paste(s), "1" = i, "2" = i - 101)
         t       <- 1:length(i:lastrow)
-        discR   <- 1/(1+disc_percentage/100)^t
+        DR      <- v.disc[1:length(t)]
+        discR   <- 1/(1+DR)^t
         dx      <- f.sumdiag(dc[,grepl(v,colnames(dc))], from = i, to = lastrow, disc_vector = discR) # Get the sum of the last 5 years of life at each age i to 100
         dx      <- stats::na.omit(dx)
         sx      <- sc[i:lastrow,v] * discR
@@ -215,18 +229,18 @@ renderLHCE <- function(country, user.providers, user.diseases, disc_percentage, 
 
     if (inherits(user.uploaded,"list")) {
 
-      sc <- user.uploaded[["sc"]]
-      dc <- user.uploaded[["dc"]]
+      SC <- user.uploaded[["sc"]]
+      DC <- user.uploaded[["dc"]]
 
       for (s in 1:2) {
         for (i in sex[[s]]) {
           lastrow        <- 101 + 101*(s-1)
           j              <- switch(paste(s), "1" = i, "2" = i - 101)
-          sx             <- sc[i:lastrow]
+          sx             <- SC[i:lastrow]
           sx             <- dplyr::lag(sx)
           sx[is.na(sx)]  <- 0
           sx             <- cumsum(sx)
-          dx             <- dc[i:lastrow]
+          dx             <- DC[i:lastrow]
           user_lhce[i,j:101] <- sx + dx
         }
       }
@@ -245,6 +259,15 @@ renderLHCE <- function(country, user.providers, user.diseases, disc_percentage, 
     user_lhce <- array(user_lhce, dim = c(202,101,3), dimnames = list(start = rep(0:100,2), end = 0:100,var.vec))
     lhce <- lhce - user_lhce
   }
+  
+  
+  for (i in 1:202) {
+    lower <- lhce[i,,"lower"]
+    upper <- lhce[i,,"upper"]
+    lhce[i,,"lower"] <-  pmin(lower, upper)
+    lhce[i,,"upper"] <-  pmax(lower, upper)
+  }
+
 
   res <- list(lhce = lhce, sc = sc, dc = dc)
 
@@ -262,24 +285,37 @@ renderLHCE <- function(country, user.providers, user.diseases, disc_percentage, 
 #' @param start_age Takes the same `start_age` as the main function pai4::paid
 #'
 #' @return a list
-renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age) {
+#' @export
+renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justcosts = FALSE) {
 
   var.vec    <- c("mean","lower","upper")
   sex.vec    <- c("Men","Women")
   nrows      <- dim(survdata)[1]
 
-  costlist <- list(Men   = stats::na.omit(costlist[start_age+1,,]),
-                   Women = stats::na.omit(costlist[start_age+102,,]))
-
+  costlist <- list(Men   = stats::na.omit(costlist[round(start_age)+1,,]),
+                   Women = stats::na.omit(costlist[round(start_age)+102,,]))
+  
   # Generate cost vector in accordance with user cycle-length
+  user_agevec   <- rep(cycle_length,nrows-1)
+  user_agevec   <- c(0,user_agevec)
+  user_agevec   <- t <- cumsum(user_agevec)
+  user_agevec   <- user_agevec + start_age
+  
+  # Extend costlist in case cohort lives beyond 100 years.
+  if (any(round(user_agevec)>100)) {
+    add_ages <- unique(round(user_agevec)[round(user_agevec)>100])
+    costlist <- lapply(costlist,function(x) {
+      repn <- rep(which(rownames(x)==100),length(add_ages))
+      repx <- matrix(x[repn,], ncol=3)
+      rownames(repx) <- add_ages
+      rbind(x,repx)
+      })
+  }
+
+  
   if (cycle_length!=1) {
-    user_agevec   <- rep(cycle_length,nrows-1)
-    user_agevec   <- c(0,user_agevec)
-    user_agevec   <- t <- cumsum(user_agevec)
-    user_agevec   <- user_agevec + start_age
-    last_user_age <- round(user_agevec[nrows])
+    orig_agevec   <- unique(round(user_agevec))
     user_agevec   <- user_agevec + cycle_length/2
-    orig_agevec   <- start_age:last_user_age
     # The original costs consider costs accrued towards the end of the interval. But with a shorter cycle, the start of the interval is needed.
     # For example, with a start_age=20 and 3-week cycle length, the original file will give costs at age 20 of approx 30000.
     # But that 30000 is the costs of the last year of life of a 20-year-old if they'd died at age 20.999.
@@ -296,12 +332,13 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age) {
       })
     })
   } else {
+    
     # Half-cycle correction
     costlist <- lapply(sex.vec, function(s) {
       new <- rbind(c(0,0,0),costlist[[s]])
       new <- (new + dplyr::lead(new))/2
       new <- stats::na.omit(new)
-      rownames(new) <- 0:100
+      rownames(new) <- user_agevec
       costlist[[s]] <- new
     })
     names(costlist) <- sex.vec
@@ -311,8 +348,12 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age) {
   names(costlist) <- sex.vec
 
   # Get sex-weighted costs
-  uwcosts <- costlist
+  uwcosts  <- costlist
   costlist <- costlist[["Men"]]*pmen + (1-pmen)*costlist[["Women"]]
+
+  if (justcosts) {
+    return(costlist)
+  }
 
   # Get survival and number of people dying each cycle
   cohort_f   <- as.data.frame(sapply(c(1,2),function(x) {dplyr::lag(survdata[,x])-survdata[,x]}))

@@ -5,7 +5,7 @@
 \title{Generates unrelated survivor and decedent costs
 Adjusts spending by time to death with the probability to NOT die of either related diseases conditional on death at age a. Then sums op the spending across selected providers.}
 \usage{
-renderUnrelSCDC(country, user.providers, user.diseases)
+renderUnrelSCDC(country, user.providers, user.diseases, coi.year)
 }
 \arguments{
 \item{country}{Takes the same \code{country} as the main function pai4::paid}

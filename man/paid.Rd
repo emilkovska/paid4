@@ -5,41 +5,45 @@
 \title{Produce unrelated medical spending}
 \usage{
 paid(
-  country = c("Netherlands", "Germany", "Greece", "Spain", "United Kingdom"),
+  country = c("Netherlands", "Germany", "France", "Greece", "Spain", "United Kingdom"),
   providers = "ALL",
-  discount_perc = 3,
+  discount_perc = NULL,
   related.diseases = NULL,
   cost.method = NULL,
   related.costs = NULL,
   survdata = NULL,
   pmen = 0.5,
   cycle_length = 1,
-  start_age = 0
+  start_age = 0,
+  coi.year = NULL
 )
 }
 \arguments{
-\item{country}{Current options are
-c("Netherlands","Germany","Greece","Spain","United Kingdom")}
+\item{country}{Current options are "Netherlands", "Germany","France",
+"Greece", "Spain", and "United Kingdom".}
 
 \item{providers}{By default all providers within a country are taken. Review
 available providers by country \code{paid4::available.providers}. For example,
 setting this to c("HC","LTC") will only show the sum of costs from
 inpatient hospital and long-term care spending.}
 
-\item{discount_perc}{The percentage for discounting costs (in percent). The
-default is 3.}
+\item{discount_perc}{either a single numerical value (in percent, e.g. 3) or
+a numerical named vector (e.g., c('1' = 2.5, '30' = 1.5)). This will be the
+percentage used to discount lifetime healthcare costs. The default is
+assigned as per the country-specific HTA guidelines.}
 
 \item{related.diseases}{an integer vector or \code{NULL}. Applicable for the
-Netherlands and Germany only. The default, \code{NULL}, marks all diseases as
-unrelated. To mark a disease as related and exclude its costs, provide here
-its corresponding "Group in PAID" from \code{paid4::mapping}. Example:
-\code{related.diseases = c(16,25)} for the Netherlands would mark "breast
-cancer" and "other cancers" as related diseases and exclude their costs.}
+Netherlands, Germany, and France only. The default, \code{NULL}, marks all
+diseases as unrelated. To mark a disease as related and exclude its costs,
+provide here its corresponding "Group in PAID" number from \code{paid4::mapping}.
+Example: \code{related.diseases = c(14,25)} for the Netherlands would mark
+"breast cancer" and "other cancers" as related diseases and exclude their
+costs.}
 
 \item{cost.method}{\code{NULL} (default) or a character vector. Defines how costs
 of related diseases are excluded - from cost of illness (option "dscosts")
-or from own data "totcosts". The default for Netherlands and Germany is
-dscosts, totcosts for the rest. Review options
+or from own data "totcosts". The default for Netherlands, Germany, and
+France is dscosts, totcosts for the rest. Review options
 \code{paid4::available.costmethods}.}
 
 \item{related.costs}{\code{NULL} (default), numeric vector (see
@@ -52,7 +56,7 @@ survivor and decedent costs. Fill in the provided templates under
 here retaining the same structure.}
 
 \item{survdata}{By default \code{NULL}. Else takes a data.frame or matrix with
-two columns. The first column gives overall survival of the intervention
+two columns. The first column must give overall survival of the intervention
 group, and the second - of the control.}
 
 \item{pmen}{Only relevant if \code{survdata} is provided. Proportion of
@@ -64,6 +68,11 @@ example, a cycle length of 3 weeks would be 3/52 = 0.05769231.}
 
 \item{start_age}{Only relevant if \code{survdata} is provided. Age at the start
 of the simulation. Default is 0.}
+
+\item{coi.year}{numerical value, denoting which Cost of Illness study year is
+to be used for calculating lifetime healthcare spending. The default
+differs by country, but it is always the latest COI year. Currently, the
+default for the Netherlands is 2019, Germany - 2020, and France - 2019.}
 }
 \value{
 If no \code{survdata} is provided, the function returns a list containing:
@@ -77,16 +86,19 @@ the mean, lower of upper range of the estimate. For example, sub-setting
 the \code{lhce} array as \verb{[1,,]} will return a 101x3 matrix of lifetime medical
 spending since age 0 for men with its mean, lower and upper range.
 \item sc: non-discounted survivor per-capita costs by age (TTD>4).
-\item dc: non-discounted decedent costs (TTD<=4) where TTD=0 means
-death at the same age as start.
+\item dc:  non-discounted decedent costs (TTD<=4) where TTD=0 means death at
+the same age as start.
+\item Source year used for costs and presenting prices.
 }
 
 If \code{survdata} is provided, the function returns a list of
 \enumerate{
-\item output:  Survival * discounted, half-cycle corrected, sex-weighted unrelated costs;
+\item output: Survival * discounted, half-cycle corrected, sex-weighted
+unrelated costs;
 \item wcosts:  Discounted, half-cycle corrected, sex-weighted unrelated costs;
 \item uwcosts: Discounted, half-cycle corrected unrelated costs for men &
 women separately in the pre-specified cycle length.
+\item Source year used for costs and presenting prices.
 }
 }
 \description{

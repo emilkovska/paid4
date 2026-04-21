@@ -4,7 +4,14 @@
 \alias{renderCohort}
 \title{Combines lifetime spending with survival data}
 \usage{
-renderCohort(survdata, costlist, pmen, cycle_length, start_age)
+renderCohort(
+  survdata,
+  costlist,
+  pmen,
+  cycle_length,
+  start_age,
+  justcosts = FALSE
+)
 }
 \arguments{
 \item{survdata}{Takes the same \code{survdata} as the main function pai4::paid}

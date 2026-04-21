@@ -197,6 +197,11 @@ f.sumdiag <- function(x, from, to, disc_vector) {
   N     <- length(v_age)
   xdiag <- vector(length = N)
   mat   <- matrix(0,4,4)
+  
+  # x     <- as.matrix(x) 
+  # x     <- x[,5:1]
+  
+  
 
   for (i in 1:N) {
     # First 5 occurrences
@@ -220,4 +225,50 @@ f.sumdiag <- function(x, from, to, disc_vector) {
 
   return(xdiag)
 
+}
+
+#' Generate discount rate vector
+#'
+#' This function enables users to adjust the discount percentage depending on
+#' the time horizon. Some countries have a different discount rate depending on
+#' the time horizon. For example, France's discount rate is 2.5% for the first
+#' 29 years, and 1.5% after 30 or more years.
+#'
+#' @param x either a single numerical value (in percent) or a numerical named
+#'   vector
+#'
+#' @return a vector of dicount rates
+#' @export 
+#'
+f.discount <- function(x) {
+  
+  # Must have names
+  if (length(x)>1 & (is.null(names(x)) & is.null(colnames(x)))) {
+    error.msg <- "discount_perc must be a named vector, e.g. c('1' = 2.5, '30' = 1.5)"
+    return(print(error.msg))
+  }
+  
+  if (length(x)>1) {
+    
+    when <- names(x)
+    x    <- x[order(when)]
+    v.x  <- rep(NA,101)
+    
+    # First period
+    t0      <- 1:(as.numeric(names(x)[2])-1)
+    v.x[t0] <- x[1]   
+    
+    # Subsequent periods
+    for (i in 2:length(x)) {
+      t1      <- as.numeric(names(x)[i]):101
+      v.x[t1] <- x[i]
+    }
+    
+    v.x <- v.x/100
+    
+  } else {
+    v.x <- rep(x/100,101)
+  }
+  
+  return(v.x)
 }

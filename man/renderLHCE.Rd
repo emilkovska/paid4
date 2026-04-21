@@ -10,7 +10,8 @@ renderLHCE(
   user.providers,
   user.diseases,
   disc_percentage,
-  user.uploaded
+  user.uploaded,
+  coi.year
 )
 }
 \arguments{
