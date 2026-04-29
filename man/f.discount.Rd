@@ -11,7 +11,7 @@ f.discount(x)
 vector}
 }
 \value{
-a vector of dicount rates
+a vector of discount rates
 }
 \description{
 This function enables users to adjust the discount percentage depending on

@@ -15,7 +15,10 @@ paid(
   pmen = 0.5,
   cycle_length = 1,
   start_age = 0,
-  coi.year = NULL
+  coi.year = NULL,
+  PSA = FALSE,
+  psa.N = NULL,
+  psa.seed = NULL
 )
 }
 \arguments{
@@ -35,15 +38,15 @@ assigned as per the country-specific HTA guidelines.}
 \item{related.diseases}{an integer vector or \code{NULL}. Applicable for the
 Netherlands, Germany, and France only. The default, \code{NULL}, marks all
 diseases as unrelated. To mark a disease as related and exclude its costs,
-provide here its corresponding "Group in PAID" number from \code{paid4::mapping}.
-Example: \code{related.diseases = c(14,25)} for the Netherlands would mark
-"breast cancer" and "other cancers" as related diseases and exclude their
-costs.}
+provide here its corresponding "Group in PAID" number from
+\code{paid4::mapping}. Example: \code{related.diseases = c(14,25)} for the
+Netherlands would mark "breast cancer" and "other cancers" as related
+diseases and exclude their costs.}
 
 \item{cost.method}{\code{NULL} (default) or a character vector. Defines how costs
 of related diseases are excluded - from cost of illness (option "dscosts")
 or from own data "totcosts". The default for Netherlands, Germany, and
-France is dscosts, totcosts for the rest. Review options
+France is "dscosts", "totcosts" for the rest. Review options
 \code{paid4::available.costmethods}.}
 
 \item{related.costs}{\code{NULL} (default), numeric vector (see
@@ -56,11 +59,11 @@ survivor and decedent costs. Fill in the provided templates under
 here retaining the same structure.}
 
 \item{survdata}{By default \code{NULL}. Else takes a data.frame or matrix with
-two columns. The first column must give overall survival of the intervention
-group, and the second - of the control.}
+two columns. The first column must give overall survival of the
+intervention group, and the second - of the control.}
 
-\item{pmen}{Only relevant if \code{survdata} is provided. Proportion of
-men in the cohort. Default is 0.5.}
+\item{pmen}{Only relevant if \code{survdata} is provided. Proportion of men in the
+cohort. Default is 0.5.}
 
 \item{cycle_length}{Only relevant if \code{survdata} is provided. A numeric value
 indicating the cycle length in years. The default is 1, meaning 1 year. For
@@ -73,6 +76,14 @@ of the simulation. Default is 0.}
 to be used for calculating lifetime healthcare spending. The default
 differs by country, but it is always the latest COI year. Currently, the
 default for the Netherlands is 2019, Germany - 2020, and France - 2019.}
+
+\item{PSA}{logical. If \code{TRUE} ratios will be drawn 1000 times and the resulting
+lifetime medical spending will be presented as a distribution.}
+
+\item{psa.N}{integer. Defines how many draws in case of PSA. Default is 1000.}
+
+\item{psa.seed}{integer. If PSA, by default, a random seed is generated and
+reported back in the end results. User can also provide their own seed here.}
 }
 \value{
 If no \code{survdata} is provided, the function returns a list containing:
@@ -86,14 +97,14 @@ the mean, lower of upper range of the estimate. For example, sub-setting
 the \code{lhce} array as \verb{[1,,]} will return a 101x3 matrix of lifetime medical
 spending since age 0 for men with its mean, lower and upper range.
 \item sc: non-discounted survivor per-capita costs by age (TTD>4).
-\item dc:  non-discounted decedent costs (TTD<=4) where TTD=0 means death at
+\item dc: non-discounted decedent costs (TTD<=4) where TTD=0 means death at
 the same age as start.
 \item Source year used for costs and presenting prices.
 }
 
 If \code{survdata} is provided, the function returns a list of
 \enumerate{
-\item output: Survival * discounted, half-cycle corrected, sex-weighted
+\item output: Survival times discounted, half-cycle corrected, sex-weighted
 unrelated costs;
 \item wcosts:  Discounted, half-cycle corrected, sex-weighted unrelated costs;
 \item uwcosts: Discounted, half-cycle corrected unrelated costs for men &
@@ -102,5 +113,15 @@ women separately in the pre-specified cycle length.
 }
 }
 \description{
-Produce unrelated medical spending
+Cost-effectiveness analysis (CEA) is used in many countries to evaluate
+whether new drugs and technologies provide sufficient value for money as
+compared to existing ones. In CEA, costs and benefits are estimated over a
+patient’s lifetime in various scenarios. While lifetime medical spending
+associated with the treated disease(s) is routinely included in CEA, the
+inclusion of spending related to other diseases in life years gained is less
+common practice (e.g. costs of treating dementia in life-years gained after a
+successful heart transplant). These costs are referred to as future unrelated
+medical costs or indirect medical costs (IMC). The current function produces
+estimates of IMC for different sets of healthcare providers and comprising
+diseases.
 }

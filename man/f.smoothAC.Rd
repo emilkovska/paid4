@@ -11,7 +11,7 @@ f.smoothAC(dep, inc = 1, lastsexage)
 
 \item{inc}{ensures a small increment is added to any value that is a perfect 0. This ensures correct log transformation.}
 
-\item{lastsexage}{location within dep vector of the last age group for men.}
+\item{lastsexage}{location within \code{dep} vector of the last age group for men.}
 }
 \value{
 numerical vector of length 202

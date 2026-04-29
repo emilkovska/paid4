@@ -10,19 +10,27 @@ renderCohort(
   pmen,
   cycle_length,
   start_age,
-  justcosts = FALSE
+  justcosts = FALSE,
+  PSA,
+  psa.N
 )
 }
 \arguments{
-\item{survdata}{Takes the same \code{survdata} as the main function pai4::paid}
+\item{survdata}{Takes the same \code{survdata} as the main function \code{\link[=paid]{paid()}}}
 
 \item{costlist}{Takes the \code{lhce} output from renderLHCE}
 
-\item{pmen}{Takes the same \code{pmen} as the main function pai4::paid}
+\item{pmen}{Takes the same \code{pmen} as the main function \code{\link[=paid]{paid()}}}
 
-\item{cycle_length}{Takes the same \code{cycle_length} as the main function pai4::paid}
+\item{cycle_length}{Takes the same \code{cycle_length} as the main function \code{\link[=paid]{paid()}}}
 
-\item{start_age}{Takes the same \code{start_age} as the main function pai4::paid}
+\item{start_age}{Takes the same \code{start_age} as the main function \code{\link[=paid]{paid()}}}
+
+\item{justcosts}{logical. Not used in the package, was added for the Shiny App.}
+
+\item{PSA}{logical. Taken from main function.}
+
+\item{psa.N}{number of draws. Taken from main function.}
 }
 \value{
 a list

@@ -11,19 +11,27 @@ renderLHCE(
   user.diseases,
   disc_percentage,
   user.uploaded,
-  coi.year
+  coi.year,
+  PSA,
+  psa.N
 )
 }
 \arguments{
-\item{country}{Takes the same \code{country} as the main function pai4::paid}
+\item{country}{Takes the same \code{country} as the main function \code{\link[=paid]{paid()}}}
 
-\item{user.providers}{a character vector. Takes the same \code{user.providers} as the main function pai4::paid}
+\item{user.providers}{a character vector. Takes the same \code{user.providers} as the main function \code{\link[=paid]{paid()}}}
 
-\item{user.diseases}{a data.frame of related diseases. See \code{related.diseases}in the main function pai4::paid}
+\item{user.diseases}{a data.frame of related diseases. See \code{related.diseases}in the main function \code{\link[=paid]{paid()}}}
 
-\item{disc_percentage}{Takes the same \code{disc_percentage} as the main function pai4::paid}
+\item{disc_percentage}{Takes the same \code{disc_percentage} as the main function \code{\link[=paid]{paid()}}}
 
-\item{user.uploaded}{Takes the same \code{user.uploaded} as the main function pai4::paid}
+\item{user.uploaded}{Takes the same \code{user.uploaded} as the main function \code{\link[=paid]{paid()}}}
+
+\item{coi.year}{Cost of illness year. Taken from main function.}
+
+\item{PSA}{logical. Taken from main function.}
+
+\item{psa.N}{number of draws. Taken from main function.}
 }
 \value{
 list

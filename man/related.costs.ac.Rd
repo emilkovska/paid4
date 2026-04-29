@@ -14,12 +14,12 @@ PAID 4.0 tool
 related.costs.ac
 }
 \description{
-This file serves as a template for users to fill in (if needed) and pass
-onto \code{related.costs} option of the \code{paid} function. This template should be
-used if the related costs you wish to upload are simple per-capita averages
-and do not differentiate between last year of life spending and spending in
-other years. The first 101 elements should contain per-capita related
-spending that needs to be excluded from PAID for men for ages 0 to 100.
-Elements 102:202 should contain the same for women.
+This file serves as a template for users to fill in (if needed) and pass onto
+\code{related.costs} option of the \code{\link[=paid]{paid()}} function. This template should
+be used if the related costs you wish to upload are simple per-capita
+averages and do not differentiate between last year of life spending and
+spending in other years. The first 101 elements should contain per-capita
+related spending that needs to be excluded from PAID for men for ages 0 to
+100. Elements 102:202 should contain the same for women.
 }
 \keyword{datasets}

@@ -6,8 +6,8 @@
 \title{A template for users to provide own related costs - with end-of-life
 correction}
 \format{
-list of length 2. The two objects are called "sc" and "dc" and
-contain a numeric vector of length 202.
+list of length 2. The two objects are called "sc" and "dc" and each
+contains a numeric vector of length 202.
 }
 \source{
 PAID 4.0 tool
@@ -17,10 +17,10 @@ related.costs.scdc
 }
 \description{
 This file serves as a template for users to fill in (if needed) and pass onto
-\code{related.costs} option of the \code{paid} function. This template should be used
-if the related costs you wish to upload have separate estimates for the last
-year of life ("dc") and other years ("sc"). The first 101 elements within
-each list should contain per-capita related spending that needs to be
+\code{related.costs} option of the \code{\link[=paid]{paid()}} function. This template should
+be used if the related costs you wish to upload have separate estimates for
+the last year of life ("dc") and other years ("sc"). The first 101 elements
+within each list should contain per-capita related spending that needs to be
 excluded from PAID for men for ages 0 to 100. Elements 102:202 should contain
 the same for women.
 }

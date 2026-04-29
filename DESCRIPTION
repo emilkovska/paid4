@@ -19,7 +19,7 @@ Imports:
     magrittr,
     mgcv,
     stringr,
-    tidyr
+    utils
 Suggests: 
     readxl,
     rjson,

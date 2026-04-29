@@ -52,9 +52,8 @@ coi.defaults <- c(Netherlands = "2019",
 
 ##### GENERATE INITIAL MAPPING DIAG FILE ####
 
-# Every country must have a mapping > diag file even if empty, as it allows for easier update is the country gains any COI
+# Every country must have a mapping > diag file even if empty, as it allows for easier update if the country gains any COI
 # The NL mapping for diagnoses can be dynamically updated depending on COI year, but an initial file is needed 
-# Mapping Excel files will be deleted prior to package launch, but will remain available through the Shiny App Repo in GitHub
 mapping <- vector("list",length(all.country))
 names(mapping) <- all.country
 for (cntry in all.country) {
@@ -72,11 +71,11 @@ mapping[["Germany"]][["2015"]] <- readxl::read_excel(paste("data-raw/Germany_map
                                                      sheet = "diag",.name_repair = "unique_quiet")
 usethis::use_data(mapping, overwrite = TRUE)
 rm(mapping)
-##### GENERATE TC files ######
 
+##### GENERATE TC files ######
 # To add newer COI studies: 
 # 1) Add the desired year under the year argument in function callKvZ()
-# 2) Update the coi list within callKvZ() accordingly. 
+# 2) Update the COI list within callKvZ() accordingly. 
     # The API info is taken from https://www.vzinfo.nl/kosten-van-ziekten > click on the "Maak uw eigen tabellen en grafieken YYYY" 
     # Go to the Download button above the table > "Meer opties via Dataportaal" 
     # Copy and paste everything after clicking on "API (voor Apps)" and surround it by single quotes to make text ---> ''
@@ -97,12 +96,12 @@ tc         <- list("Netherlands" = list("2019" = tc_NL_2019,
                    "France"  = list("2019" = tc_FR))
 rm(list = c("tc_DE_2020","tc_DE_2015","tc_FR","tc_NL_2019","tc_NL_2017","tc_NL_2015"))
 devtools::load_all()
-##### MORTALITY  ######
 
+##### MORTALITY  ######
 # Raw mortality data is obtained from the Human Mortality Database - mortality.org
 # The HMD does not have an API service set up, and is accessible only thought a free account.
 # To get new raw files, get Age-Specific Death Rates 1x1.
-# Instead, the cleanMortRate() function will clean up the files as needed and combine them to be used internally. 
+# The cleanMortRate() function will clean up the raw files as needed and combine them to be used internally. 
 probDeath <- mort  <- vector(mode = "list", length = length(all.country))
 names(mort) <- names(probDeath) <- all.country
 for (i in all.country) {
@@ -111,22 +110,23 @@ for (i in all.country) {
   probDeath[[i]] <- getProbDeath(i)
 }
 
-# Calculate p(x,d=1|a,s) - Onlt for NL & DE (COI countries)
+# Calculate p(x,d=1|a,s) - Only for COI countries
+# Mapping for COD to Disease codes was done manually.
 
 probDeathCause <- probDeathChapters <- vector("list", length(coi.country))
 names(probDeathCause) <- names(probDeathChapters) <- coi.country
 
-# Causes of death, 2019 https://www-genesis.destatis.de/ 
-# Code: 23211-0002 Deaths: Germany, years, causes of death, sex, age groups.
-# Mapping for COD to Disease codes was done manually.
 
 x <- getDeathCauseNL()
 probDeathCause[["Netherlands"]]    <- x[["probDeathCause"]]
 probDeathChapters[["Netherlands"]] <- x[["probDeathChapters"]]
 
+# Causes of death, 2019 https://www-genesis.destatis.de/ 
+# Code: 23211-0002 Deaths: Germany, years, causes of death, sex, age groups.
 x <- getDeathCauseDE()
 probDeathCause[["Germany"]]    <- x[["probDeathCause"]]
 probDeathChapters[["Germany"]] <- x[["probDeathChapters"]]
+
 
 x <- getDeathCauseFR()
 probDeathCause[["France"]]    <- x[["probDeathCause"]]
@@ -213,9 +213,10 @@ for (cntry in all.country) {
 
 for (cntry in all.country) {
   for (y in coi.options[[cntry]]) {
-    scdc[[cntry]][[y]] <- getSCDC(cntry,providers = available.providers[[cntry]], coi.year = y)
+    scdc[[cntry]][[y]] <- getSCDC(cntry,providers = available.providers[[cntry]], coi.year = y, PSA = FALSE)
   }
 }
+
 
 
 # Make some available to users
@@ -223,14 +224,17 @@ related.costs.scdc <- list(sc = rep(0,202),dc = rep(0,202))
 names(related.costs.scdc$sc) <- names(related.costs.scdc$dc) <- paste(rep(c("Men","Women"), each=101),0:100,sep = "_")
 related.costs.ac <- related.costs.scdc$sc
 
-usethis::use_data(mort, probDeath, probDeathCause, probDeathChapters, 
-                  notratios, ac, scdc,
-                  internal = TRUE, overwrite = TRUE)
-
 usethis::use_data(mapping, 
                   available.costmethods, 
                   available.providers, 
                   related.costs.scdc, 
-                  related.costs.ac, overwrite = TRUE)
+                  related.costs.ac, 
+                  overwrite = TRUE)
+
+
+
+usethis::use_data(mort, probDeath, probDeathCause, probDeathChapters, ratios, 
+                  notratios, ac, scdc,
+                  overwrite = TRUE, internal = TRUE, compress = "xz")
 
 devtools::load_all()

@@ -26,7 +26,7 @@
 #' Germany, and France. `paid4::mapping[[country]][[coi.year]]` displays a data frame
 #' listing all diseases that comprise the cost estimates and show what their
 #' corresponding groups are. To be used as guidance for `related.diseases`
-#' option of the `paid` function.
+#' option of the [paid4::paid()] function.
 #'
 #' @source PAID 4.0 tool
 #' @format list of data frames for each country
@@ -34,13 +34,13 @@
 
 #' A template for users to provide own related costs - no end-of-life correction
 #'
-#' This file serves as a template for users to fill in (if needed) and pass
-#' onto `related.costs` option of the `paid` function. This template should be
-#' used if the related costs you wish to upload are simple per-capita averages
-#' and do not differentiate between last year of life spending and spending in
-#' other years. The first 101 elements should contain per-capita related
-#' spending that needs to be excluded from PAID for men for ages 0 to 100.
-#' Elements 102:202 should contain the same for women.
+#' This file serves as a template for users to fill in (if needed) and pass onto
+#' `related.costs` option of the [paid4::paid()] function. This template should
+#' be used if the related costs you wish to upload are simple per-capita
+#' averages and do not differentiate between last year of life spending and
+#' spending in other years. The first 101 elements should contain per-capita
+#' related spending that needs to be excluded from PAID for men for ages 0 to
+#' 100. Elements 102:202 should contain the same for women.
 #'
 #' @source PAID 4.0 tool
 #' @format a numeric vector of length 202
@@ -50,14 +50,14 @@
 #' correction
 #'
 #' This file serves as a template for users to fill in (if needed) and pass onto
-#' `related.costs` option of the `paid` function. This template should be used
-#' if the related costs you wish to upload have separate estimates for the last
-#' year of life ("dc") and other years ("sc"). The first 101 elements within
-#' each list should contain per-capita related spending that needs to be
+#' `related.costs` option of the [paid4::paid()] function. This template should
+#' be used if the related costs you wish to upload have separate estimates for
+#' the last year of life ("dc") and other years ("sc"). The first 101 elements
+#' within each list should contain per-capita related spending that needs to be
 #' excluded from PAID for men for ages 0 to 100. Elements 102:202 should contain
 #' the same for women.
 #'
 #' @source PAID 4.0 tool
-#' @format list of length 2. The two objects are called "sc" and "dc" and
-#'   contain a numeric vector of length 202.
+#' @format list of length 2. The two objects are called "sc" and "dc" and each
+#'   contains a numeric vector of length 202.
 "related.costs.scdc"

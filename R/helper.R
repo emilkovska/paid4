@@ -72,7 +72,7 @@ f.right = function(text, num_char) {
 #'
 #' @param dep numerical vector where the first N values are for men and the next N are for women.
 #' @param inc ensures a small increment is added to any value that is a perfect 0. This ensures correct log transformation.
-#' @param lastsexage location within dep vector of the last age group for men.
+#' @param lastsexage location within `dep` vector of the last age group for men.
 #'
 #' @return numerical vector of length 202
 #' @export
@@ -118,6 +118,8 @@ f.replacespecial <- function(x,repif = NULL, repwith = NULL) {
   x           <- as.matrix(x)
   name.x      <- colnames(x)
   mean.names  <- name.x[grepl("mean",name.x)]
+  
+  if (is.null(mean.names)) {mean.names <- "mean"}
 
   for (q in 1:length(mean.names)) {
     mean.name  <- mean.names[q]
@@ -127,8 +129,10 @@ f.replacespecial <- function(x,repif = NULL, repwith = NULL) {
 
     # Record positions in original x
     col.num   <- which(colnames(x) %in% c(mean.name,lower.name,upper.name))
-    df        <- x[,col.num]
-    n_i <- switch(paste(is.na(repif)),
+    if (length(col.num)==0) {col.num <- 1}
+    df        <- matrix(x[,col.num], nrow = 202)
+    J         <- ncol(df)
+    n_i <- switch(paste(is.null(repif)),
                   "TRUE"  = apply(df,2,FUN = function(x) which(is.na(x))),
                   "FALSE" = apply(df,2,FUN = function(x) which(x<=repif)))
     n_i    <- Reduce(union,n_i)
@@ -140,7 +144,7 @@ f.replacespecial <- function(x,repif = NULL, repwith = NULL) {
     if (is.null(repwith)) {
       if (!any(n_i %in% c(1,102))) {
         for (i in n_i) {
-          for (j in 1:3) {
+          for (j in 1:J) {
             df[i,j] <- df[i-1,j]
           }
         }
@@ -148,7 +152,7 @@ f.replacespecial <- function(x,repif = NULL, repwith = NULL) {
         n     <- n_i[n_i %in% c(1,102)]
         for (ii in n) {
           y <- switch(paste(ii), "1" = min(setdiff(1:101,n_i)),"102" = min(setdiff(102:202,n_i)))
-          for (j in 1:3) {
+          for (j in 1:J) {
             df[ii,j] <- df[y,j]
           }
         }
@@ -156,7 +160,7 @@ f.replacespecial <- function(x,repif = NULL, repwith = NULL) {
         n_i <- setdiff(n_i,n)
 
         for (i in n_i) {
-          for (j in 1:3) {
+          for (j in 1:J) {
             df[i,j] <- df[i-1,j]
           }
         }
@@ -164,7 +168,7 @@ f.replacespecial <- function(x,repif = NULL, repwith = NULL) {
 
     } else {
       for (i in n_i) {
-        for (j in 1:3) {
+        for (j in 1:J) {
           df[i,j] <- repwith
         }
       }
@@ -197,31 +201,25 @@ f.sumdiag <- function(x, from, to, disc_vector) {
   N     <- length(v_age)
   xdiag <- vector(length = N)
   mat   <- matrix(0,4,4)
+  x.rev <- as.matrix(x) 
+  x.rev <- x[,5:1]
   
-  # x     <- as.matrix(x) 
-  # x     <- x[,5:1]
+  # First occurrence
+  a        <- v_age[1]
+  xdiag[1] <- x.rev[a,5] * disc_vector[1]
   
-  
+  if (N==1) {return(xdiag)}
 
-  for (i in 1:N) {
-    # First 5 occurrences
+  for (i in 2:N) {
+    a  = v_age[i]
+    # Next 3 occurrences
     if (i < 5) {
-      a  = v_age[i]
-      J  = 5-i
-      ii = i-1
-      for (j in 1:J) {
-        mat[j+ii,j] <- x[a,j] * disc_vector[i]
-      }
+      j        <- (6-i):5
+      xdiag[i] <- sum(diag( x.rev[(a-i+1):a,j]) * disc_vector[1:i])
     } else { # Rest
-      for (j in 1:5) {
-        ii       <- v_age[i]-j+1
-        di       <- i-j+1
-        xdiag[i] <- xdiag[i] + x[ii,j] * disc_vector[di]
-      }
+      xdiag[i] <- sum(diag(x.rev[(a-4):a,]) * disc_vector[(i-4):i])
     }
   }
-
-  xdiag[1:4] <- rowSums(mat)
 
   return(xdiag)
 
@@ -237,15 +235,15 @@ f.sumdiag <- function(x, from, to, disc_vector) {
 #' @param x either a single numerical value (in percent) or a numerical named
 #'   vector
 #'
-#' @return a vector of dicount rates
+#' @return a vector of discount rates
 #' @export 
 #'
 f.discount <- function(x) {
   
   # Must have names
   if (length(x)>1 & (is.null(names(x)) & is.null(colnames(x)))) {
-    error.msg <- "discount_perc must be a named vector, e.g. c('1' = 2.5, '30' = 1.5)"
-    return(print(error.msg))
+    error.msg <- "discount_perc must be a named vector if applying advanced discounting, e.g. c('1' = 2.5, '30' = 1.5)"
+    stop(error.msg)
   }
   
   if (length(x)>1) {
@@ -272,3 +270,22 @@ f.discount <- function(x) {
   
   return(v.x)
 }
+
+
+
+#' Draw ratios
+#'
+#' @param par1 the log-mean of the ratio distribution
+#' @param par2 the standard deviation of the ratio distribution
+#' @param N the number of draws. Taken from the main function.
+#'
+#' @return an array
+#' 
+#' @importFrom stats rlnorm
+#' @export
+f.draw <- function(par1,par2,N) {
+  res <- rlnorm(N, par1, par2)
+  return(res)
+}
+
+

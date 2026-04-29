@@ -5,14 +5,20 @@
 \title{Generates unrelated survivor and decedent costs
 Adjusts spending by time to death with the probability to NOT die of either related diseases conditional on death at age a. Then sums op the spending across selected providers.}
 \usage{
-renderUnrelSCDC(country, user.providers, user.diseases, coi.year)
+renderUnrelSCDC(country, user.providers, user.diseases, coi.year, PSA, psa.N)
 }
 \arguments{
-\item{country}{Takes the same \code{country} as the main function pai4::paid}
+\item{country}{Takes the same \code{country} as the main function \code{\link[=paid]{paid()}}}
 
-\item{user.providers}{a character vector. Takes the same \code{user.providers} as the main function pai4::paid}
+\item{user.providers}{a character vector. Takes the same \code{user.providers} as the main function \code{\link[=paid]{paid()}}}
 
-\item{user.diseases}{a data.frame of related diseases. See \code{related.diseases}in the main function pai4::paid}
+\item{user.diseases}{a data.frame of related diseases. See \code{related.diseases}in the main function \code{\link[=paid]{paid()}}}
+
+\item{coi.year}{Cost of illness year. Taken from main function.}
+
+\item{PSA}{logical takes the same value as \code{PSA} as the main function \code{\link[=paid]{paid()}}}
+
+\item{psa.N}{number of draws. Taken from main function.}
 }
 \description{
 Generates unrelated survivor and decedent costs

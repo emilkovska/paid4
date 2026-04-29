@@ -18,6 +18,6 @@ Only important for countries that have a cost of illness study - Netherlands,
 Germany, and France. \code{paid4::mapping[[country]][[coi.year]]} displays a data frame
 listing all diseases that comprise the cost estimates and show what their
 corresponding groups are. To be used as guidance for \code{related.diseases}
-option of the \code{paid} function.
+option of the \code{\link[=paid]{paid()}} function.
 }
 \keyword{datasets}

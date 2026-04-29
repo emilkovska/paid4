@@ -360,45 +360,6 @@ getAC <- function(country, providers, cut.pop.age,coi.year) {
 }
 
 
-#' Disaggregate per-capita spending
-#'
-#' Attributes costs to survivors and decedents. 
-#' 
-#' @param country a string
-#' @param providers a string vector
-#'
-#' @return a list
-getSCDC <- function(country, providers, coi.year) {
-  
-  DC <- SC <- vector("list", length(providers) )
-  names(DC) <- names(SC) <- providers
-  
-  for (j in providers) {
-    probs   <- probDeath[[country]]
-    avrc    <- ac[[country]][[paste(coi.year)]][[j]]
-    ratio   <- ratios[["Deterministic"]][[j]]
-    res     <- data.frame(sex = rep(c("Men","Women"), each = 101), age = 0:100)
-    avrc    <- avrc[,1] # The first column is always the total (= all diseases)
-    r       <- ratio[,3:ncol(ratio)] # The first two columns are "sex" and "age"
-    probs   <- probs[,rep(1:5,3)]
-    denom   <- (r - 1) * probs
-    denom   <- cbind(mean = rowSums(denom[,1:5], na.rm = TRUE), # 1:5 = 5 years of TTD
-                     lower = rowSums(denom[,6:10], na.rm = TRUE),
-                     upper = rowSums(denom[,11:15], na.rm = TRUE))
-    denom  <- 1 + denom
-    sc     <- avrc / denom
-    sc     <- sc[,c("mean", "lower", "upper")]
-    
-    dc     <- r * sc[,rep(1:3, each = 5)]
-#    dc     <- r * sc[,rep(1, each = 15)]
-    
-    SC[[j]] <- sc
-    DC[[j]] <- dc
-  }
-  
-  return(list(SC = SC,DC = DC))
-}
-
 
 #' Clean COI for DE
 #'
@@ -1069,7 +1030,7 @@ cleanRatios   <- function() {
   det_ratios[["Other"]] <- base_ratio
   
   # Create ratios for Other = 1 (for now)
-  psa_ratio[,3:7]  <- 1
+  psa_ratio[,3:7]  <- 0
   psa_ratio[,8:12] <- 0
   psa_ratios[["Other"]] <- psa_ratio
   
@@ -1134,6 +1095,7 @@ cleanRatiosNOTChapter <- function(country, coi.year) {
       # agelow  <- switch(p,"totalcosts" = 51, "zvwkziekenhuis" = 51, "LTC" = 18, "zvwkhuisarts" = 1,  "zvwkfarmacie" = 51)
       # agehigh <- switch(p,"totalcosts" = 96, "zvwkziekenhuis" = 96, "LTC" = 96, "zvwkhuisarts" = 100, "zvwkfarmacie" = 96)
       ratio <- ratio[order(ratio$sex,ratio$age),]
+      rownames(ratio) <- NULL
       cols <- dim(ratio)[2]
       ratio[,3:cols]   <- apply(ratio[,3:cols], 2,FUN = function(x) {paid4::f.lowhighages(x,a1=agelow,a2=agehigh)})
       notratio[[providers[names(providers) == p]]] <- ratio
@@ -1141,10 +1103,9 @@ cleanRatiosNOTChapter <- function(country, coi.year) {
     
     # Create ratios for Other = 1 (for now)
     if (m=="Deterministic") {
-      ratio[,3:cols] <- 1
+      ratio[,3:ncol(ratio)] <- 1
     } else {
-      ratio[,3:7]  <- 1
-      ratio[,8:12] <- 0
+      ratio[,3:ncol(ratio)] <- 0
     }
     
     notratio[["Other"]] <- ratio
