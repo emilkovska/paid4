@@ -31,9 +31,9 @@
 #'   `paid4::mapping`. Example: `related.diseases = c(14,25)` for the
 #'   Netherlands would mark "breast cancer" and "other cancers" as related
 #'   diseases and exclude their costs.
-#' @param cost.method `NULL` (default) or a character vector. Defines how costs
-#'   of related diseases are excluded - from cost of illness (option "dscosts")
-#'   or from own data "totcosts". The default for Netherlands, Germany, and
+#' @param cost.method `NULL` (default) or a character. Defines how costs
+#'   of related diseases are excluded - from cost of illness (option `dscosts`)
+#'   or from own data `totcosts`. The default for Netherlands, Germany, and
 #'   France is "dscosts", "totcosts" for the rest. Review options
 #'   `paid4::available.costmethods`.
 #' @param related.costs `NULL` (default), numeric vector (see
@@ -58,7 +58,7 @@
 #'   to be used for calculating lifetime healthcare spending. The default
 #'   differs by country, but it is always the latest COI year. Currently, the
 #'   default for the Netherlands is 2019, Germany - 2020, and France - 2019.
-#' @param PSA logical. If `TRUE` ratios will be drawn 1000 times and the resulting
+#' @param PSA logical. If `TRUE` ratios will be drawn `psa.N` times and the resulting
 #'   lifetime medical spending will be presented as a distribution. 
 #' @param psa.N integer. Defines how many draws in case of PSA. Default is 1000.
 #' @param psa.seed integer. If PSA, by default, a random seed is generated and 
@@ -97,7 +97,8 @@ paid <- function(country = c("Netherlands","Germany","France","Greece","Spain","
 #### Set-up defaults and on user options ####
 
   ##### Validate Country choice ####
-  country <- match.arg(country)
+  country <- match.arg(tolower(country), choices = tolower(c("Netherlands","Germany","France","Greece","Spain","United Kingdom")))
+  country <- paste(toupper(substr(country, 1, 1)), substr(country, 2, nchar(country)), sep="")
   
   ##### Validate COI year choice and set defaults ####
   options <- list(
@@ -229,4 +230,114 @@ paid <- function(country = c("Netherlands","Germany","France","Greece","Spain","
   return(res.out)
 
 }
+
+
+
+#' Produce distribution parameters after PSA
+#'
+#' In HTA, probabilistic sensitivity analysis (PSA) explores how the outcome
+#' varies when all parameters vary simultaneously when drawn from their
+#' distributions. For this purpose, the current function fits several
+#' distributions on the lifetime healthcare expenditures (LHCE) at each age/sex,
+#' chooses the distribution with the best AIC fit, and reports back the distribution
+#' and its parameters.
+#'
+#' @param data the output produced from running [paid4::paid()] with PSA set to
+#'   TRUE. If no survival curves are uploaded in the main [paid4::paid()]
+#'   function, distributions are fitted to the LHCE at each 1-year age/sex
+#'   separately. If `survdata` was passed onto the main function, then
+#'   distributions are fitted on the cycle length-specific costs.
+#' @param start_age Only applicable if `survdata` is not passed onto the main
+#'   function [paid4::paid()]. Define start age for which to observe cost
+#'   distributions. The default is either 0 or the age at the first cycle in
+#'   case `survdata` is provided.
+#'
+#' @return a data.frame containing the bets fitting distributions and their
+#'   parameters by each age/sex group.
+#' @importFrom MASS fitdistr
+#' @importFrom stats AIC
+#' @importFrom stats var
+#' @export
+#'
+#' @examples
+#'\dontrun{
+#' paid.distr(data = paid("Netherlands", PSA = TRUE))
+#' paid.distr(data = paid("Netherlands", PSA = TRUE, survdata = someOS))
+#' }
+paid.distr <- function(data, start_age=NULL) {
+ 
+  if (!inherits(data, "list") | !any(names(data) %in% c("lhce", "uwcosts")) ) {
+    error.msg <- "data must be a list resulting from paid4:paid() where the PSA option is set to TRUE."
+    stop(error.msg)
+  }
+  
+  whichrun <- names(data)[names(data) %in% c("lhce", "uwcosts")]
+  data     <- data[[whichrun]]
+  if (is.null(start_age)) {start_age <- 0} 
+  v.run <- c( Men = start_age+1, Women = start_age+102)
+  
+  for (s in 1:2) {
+    
+    if (whichrun=="lhce") {
+      
+      dat   <- data[v.run[s],,] 
+    } else {
+      dat   <- data[[s]]
+    }
+  
+    
+    dat  <- na.omit(dat)
+    test <- apply(dat,1,function(x) {
+      
+      gamma_start <- list(
+        shape = mean(x)^2 / var(x),
+        rate  = mean(x) / var(x)
+      )
+      
+      weibull_start <- list(
+        shape = 1.2, 
+        scale = mean(x)
+      )
+        
+      suppressWarnings(fits <- list(
+        normal  = try(fitdistr(x, "normal"), silent = TRUE),
+        lognorm = try(fitdistr(x, "lognormal"), silent = TRUE),
+        gamma   = try(fitdistr(x, "gamma", start = gamma_start), silent = TRUE),
+        weibull = try(fitdistr(x, "weibull", start = weibull_start), silent = TRUE),
+        exp     = try(fitdistr(x, "exponential"), silent = TRUE)
+      ))
+        
+      aic <- sapply(fits, function(f) {
+        if (inherits(f, "try-error")) return(NA)
+        AIC(f)
+      })
+        
+      minname <- names(which.min(aic))
+      fit      <- fits[[minname]]
+      names(minname) <- "distr"
+      param    <- names(fit$estimate)
+      list(minname,fit$estimate[1], fit$estimate[2])
+  })
+    res  <- data.frame(age          = as.numeric(names(test)), 
+                      sex           = names(v.run[s]),
+                      distribution  = unlist(lapply(test,function(x) {x[1]})),
+                      par1_name     = unlist(lapply(test,function(x) { names(unlist(x[2])) })),
+                      par1_value    = unlist(lapply(test,function(x) {x[2]})),
+                      par2_name     = unlist(lapply(test,function(x) { names(unlist(x[3])) })),
+                      par2_value    = unlist(lapply(test,function(x) {x[3]}))
+                      )
+    
+    if (s==1) {
+      out <- res
+    } else {
+      out <- rbind(out,res)
+    }
+  
+  }
+  
+  rownames(out) <- NULL
+  
+ return(out)
+  
+} 
 

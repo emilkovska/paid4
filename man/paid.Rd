@@ -43,9 +43,9 @@ provide here its corresponding "Group in PAID" number from
 Netherlands would mark "breast cancer" and "other cancers" as related
 diseases and exclude their costs.}
 
-\item{cost.method}{\code{NULL} (default) or a character vector. Defines how costs
-of related diseases are excluded - from cost of illness (option "dscosts")
-or from own data "totcosts". The default for Netherlands, Germany, and
+\item{cost.method}{\code{NULL} (default) or a character. Defines how costs
+of related diseases are excluded - from cost of illness (option \code{dscosts})
+or from own data \code{totcosts}. The default for Netherlands, Germany, and
 France is "dscosts", "totcosts" for the rest. Review options
 \code{paid4::available.costmethods}.}
 
@@ -77,7 +77,7 @@ to be used for calculating lifetime healthcare spending. The default
 differs by country, but it is always the latest COI year. Currently, the
 default for the Netherlands is 2019, Germany - 2020, and France - 2019.}
 
-\item{PSA}{logical. If \code{TRUE} ratios will be drawn 1000 times and the resulting
+\item{PSA}{logical. If \code{TRUE} ratios will be drawn \code{psa.N} times and the resulting
 lifetime medical spending will be presented as a distribution.}
 
 \item{psa.N}{integer. Defines how many draws in case of PSA. Default is 1000.}

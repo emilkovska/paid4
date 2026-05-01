@@ -488,6 +488,7 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
       })
     })
   } else {
+  #  browser()
     
     # Half-cycle correction
     costlist <- lapply(sex.vec, function(s) {

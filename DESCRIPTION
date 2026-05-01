@@ -19,7 +19,8 @@ Imports:
     magrittr,
     mgcv,
     stringr,
-    utils
+    utils, 
+    MASS
 Suggests: 
     readxl,
     rjson,
