@@ -15,20 +15,23 @@ distributions are fitted on the cycle length-specific costs.}
 
 \item{start_age}{Only applicable if \code{survdata} is not passed onto the main
 function \code{\link[=paid]{paid()}}. Define start age for which to observe cost
-distributions. The default is either 0 or the age at the first cycle in
-case \code{survdata} is provided.}
+distributions. The default is either 0 or the age at the first cycle in case
+\code{survdata} is provided.}
 }
 \value{
-a data.frame containing the bets fitting distributions and their
-parameters by each age/sex group.
+a data.frame containing the best fitting distributions and their
+parameters by each age/sex group. If \code{survdata} was provided in the main
+function, the distributions are fitted on the unweighted by sex - unrelated
+costs that are discounted and half-cycle correcter for men & women
+separately in the pre-specified cycle length.
 }
 \description{
 In HTA, probabilistic sensitivity analysis (PSA) explores how the outcome
 varies when all parameters vary simultaneously when drawn from their
 distributions. For this purpose, the current function fits several
 distributions on the lifetime healthcare expenditures (LHCE) at each age/sex,
-chooses the distribution with the best AIC fit, and reports back the distribution
-and its parameters.
+chooses the distribution with the best AIC fit, and reports back the
+distribution and its parameters.
 }
 \examples{
 \dontrun{

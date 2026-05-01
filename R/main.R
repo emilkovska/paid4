@@ -233,31 +233,34 @@ paid <- function(country = c("Netherlands","Germany","France","Greece","Spain","
 
 
 
-#' Produce distribution parameters after PSA
+#'Produce distribution parameters after PSA
 #'
-#' In HTA, probabilistic sensitivity analysis (PSA) explores how the outcome
-#' varies when all parameters vary simultaneously when drawn from their
-#' distributions. For this purpose, the current function fits several
-#' distributions on the lifetime healthcare expenditures (LHCE) at each age/sex,
-#' chooses the distribution with the best AIC fit, and reports back the distribution
-#' and its parameters.
+#'In HTA, probabilistic sensitivity analysis (PSA) explores how the outcome
+#'varies when all parameters vary simultaneously when drawn from their
+#'distributions. For this purpose, the current function fits several
+#'distributions on the lifetime healthcare expenditures (LHCE) at each age/sex,
+#'chooses the distribution with the best AIC fit, and reports back the
+#'distribution and its parameters.
 #'
-#' @param data the output produced from running [paid4::paid()] with PSA set to
-#'   TRUE. If no survival curves are uploaded in the main [paid4::paid()]
-#'   function, distributions are fitted to the LHCE at each 1-year age/sex
-#'   separately. If `survdata` was passed onto the main function, then
-#'   distributions are fitted on the cycle length-specific costs.
-#' @param start_age Only applicable if `survdata` is not passed onto the main
-#'   function [paid4::paid()]. Define start age for which to observe cost
-#'   distributions. The default is either 0 or the age at the first cycle in
-#'   case `survdata` is provided.
+#'@param data the output produced from running [paid4::paid()] with PSA set to
+#'  TRUE. If no survival curves are uploaded in the main [paid4::paid()]
+#'  function, distributions are fitted to the LHCE at each 1-year age/sex
+#'  separately. If `survdata` was passed onto the main function, then
+#'  distributions are fitted on the cycle length-specific costs.
+#'@param start_age Only applicable if `survdata` is not passed onto the main
+#'  function [paid4::paid()]. Define start age for which to observe cost
+#'  distributions. The default is either 0 or the age at the first cycle in case
+#'  `survdata` is provided.
 #'
-#' @return a data.frame containing the bets fitting distributions and their
-#'   parameters by each age/sex group.
-#' @importFrom MASS fitdistr
-#' @importFrom stats AIC
-#' @importFrom stats var
-#' @export
+#'@return a data.frame containing the best fitting distributions and their
+#'  parameters by each age/sex group. If `survdata` was provided in the main
+#'  function, the distributions are fitted on the unweighted by sex - unrelated
+#'  costs that are discounted and half-cycle correcter for men & women
+#'  separately in the pre-specified cycle length.
+#'@importFrom MASS fitdistr
+#'@importFrom stats AIC
+#'@importFrom stats var
+#'@export
 #'
 #' @examples
 #'\dontrun{
