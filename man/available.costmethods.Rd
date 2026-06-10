@@ -8,7 +8,7 @@
 list
 }
 \source{
-PAID 4.0 tool
+PAID4 tool
 }
 \usage{
 available.costmethods

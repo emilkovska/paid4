@@ -61,9 +61,8 @@ renderUnrelSCDC <- function(country, user.providers, user.diseases, coi.year, PS
       related.dis    <- map$code[map$tree %in% related.branch]
     }
 
-    # Get 1-p(x,y,z|d=1,a,s) - probability to NOT die of either related diseases conditional on death at age a
+    # Get p_nox = 1-p(x,y,z|d=1,a,s) - probability to NOT die of either related diseases conditional on death at age a
     # Select only those diseases that have cause of death coded
-    
     disnames <- apply(sapply(related.dis, function(x) {grepl(x,colnames(probCause))}), 2, function(xx) {colnames(probCause)[xx]} )
     if (is.list(disnames)) {
       disnames <- do.call(c,disnames)
@@ -472,11 +471,24 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
   if (cycle_length!=1) {
     orig_agevec   <- unique(round(user_agevec))
     user_agevec   <- user_agevec + cycle_length/2
-    # The original costs consider costs accrued towards the end of the interval. But with a shorter cycle, the start of the interval is needed.
-    # For example, with a start_age=20 and 3-week cycle length, the original file will give costs at age 20 of approx 30000.
-    # But that 30000 is the costs of the last year of life of a 20-year-old if they'd died at age 20.999.
-    # So, starting from age 20 the accrued costs should be 0 (20) to 30000 (20.999).
-    # Half-cycle correction would be finding the LHCE at the age between interval 1 & interval 2 (thus, xout = user_agevec + cycle_length/2)
+    # The original costs consider costs accrued towards the end of the interval.
+    # But with a shorter cycle, the start of the interval is needed. For
+    # example, with a start_age=20 and 3-week cycle length, the original file
+    # will give costs at age 20 of approx 30000. But that 30000 is the costs of
+    # the last year of life of a 20-year-old if they'd died at age 20.999.So,
+    # starting from age 20 the accrued costs should be 0 (20) to 30000 (20.999).
+    
+    # Half-cycle correction would be finding the LHCE at the age between
+    # interval 1 & interval 2 (thus, xout = user_agevec + cycle_length/2)
+    
+    # GAMs are used here (and in other helper functions) for smoothing because
+    # GAMs do not assume a priori any relationship between the dependent
+    # variable and the covariates. In contrast, GLMs do assume either a fixed
+    # linear or some other parametric form of the relationship y and x. We let
+    # age be modeled via a P-Spline because it still uses the B-spline basis but
+    # also allows for a non-preset penalty on the basis coefficients. The
+    # penalties effectively enforce smoothness, which is logically what we would
+    # expect to see in LHCE between {age,age+delta}
     costlist <-   lapply(sex.vec,FUN = function(s) {
       sapply(var.vec, FUN = function(v) {
         f0   <- stats::approx(x = c(orig_agevec + 0.9999), y = costlist[[s]][paste(orig_agevec),v], xout = user_agevec)$y
@@ -488,9 +500,7 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
       })
     })
   } else {
-  #  browser()
-    
-    # Half-cycle correction
+    # Half-cycle correction for 1-year cycle lenghts 
     costlist <- lapply(sex.vec, function(s) {
       bindwith <- switch(paste(PSA), "TRUE" = rep(0,psa.N), "FALSE" = rep(0,3))
       new <- rbind(bindwith,costlist[[s]])
@@ -597,7 +607,6 @@ getSCDC <- function(country, providers, coi.year, PSA, psa.N) {
       sc     <- sc[,c("mean", "lower", "upper")]
       
       dc     <- r * sc[,rep(1:3, each = 5)]
-      #    dc     <- r * sc[,rep(1, each = 15)]
       
       SC[[j]] <- sc
       DC[[j]] <- dc

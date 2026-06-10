@@ -240,7 +240,8 @@ paid <- function(country = c("Netherlands","Germany","France","Greece","Spain","
 #'distributions. For this purpose, the current function fits several
 #'distributions on the lifetime healthcare expenditures (LHCE) at each age/sex,
 #'chooses the distribution with the best AIC fit, and reports back the
-#'distribution and its parameters.
+#'distribution and its parameters. The considered distributions are normal,
+#'lognormal, gamma, weibull, exponential.
 #'
 #'@param data the output produced from running [paid4::paid()] with PSA set to
 #'  TRUE. If no survival curves are uploaded in the main [paid4::paid()]
@@ -282,13 +283,11 @@ paid.distr <- function(data, start_age=NULL) {
   for (s in 1:2) {
     
     if (whichrun=="lhce") {
-      
       dat   <- data[v.run[s],,] 
     } else {
       dat   <- data[[s]]
     }
   
-    
     dat  <- na.omit(dat)
     test <- apply(dat,1,function(x) {
       
@@ -315,7 +314,7 @@ paid.distr <- function(data, start_age=NULL) {
         AIC(f)
       })
         
-      minname <- names(which.min(aic))
+      minname  <- names(which.min(aic))
       fit      <- fits[[minname]]
       names(minname) <- "distr"
       param    <- names(fit$estimate)

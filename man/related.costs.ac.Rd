@@ -8,7 +8,7 @@
 a numeric vector of length 202
 }
 \source{
-PAID 4.0 tool
+PAID4 tool
 }
 \usage{
 related.costs.ac

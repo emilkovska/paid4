@@ -10,7 +10,7 @@ list of length 2. The two objects are called "sc" and "dc" and each
 contains a numeric vector of length 202.
 }
 \source{
-PAID 4.0 tool
+PAID4 tool
 }
 \usage{
 related.costs.scdc

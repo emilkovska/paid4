@@ -6,7 +6,7 @@
 #' possible options by country for the `cost.method` option under the `paid`
 #' function.
 #'
-#' @source PAID 4.0 tool
+#' @source PAID4 tool
 #' @format list
 "available.costmethods"
 
@@ -16,7 +16,7 @@
 #' healthcare spending. This file gives a list of available providers by country
 #' to guide what can be placed in the `providers` option of the `paid` function.
 #'
-#' @source PAID 4.0 tool
+#' @source PAID4 tool
 #' @format list
 "available.providers"
 
@@ -28,7 +28,7 @@
 #' corresponding groups are. To be used as guidance for `related.diseases`
 #' option of the [paid4::paid()] function.
 #'
-#' @source PAID 4.0 tool
+#' @source PAID4 tool
 #' @format list of data frames for each country
 "mapping"
 
@@ -42,7 +42,7 @@
 #' related spending that needs to be excluded from PAID for men for ages 0 to
 #' 100. Elements 102:202 should contain the same for women.
 #'
-#' @source PAID 4.0 tool
+#' @source PAID4 tool
 #' @format a numeric vector of length 202
 "related.costs.ac"
 
@@ -57,7 +57,7 @@
 #' excluded from PAID for men for ages 0 to 100. Elements 102:202 should contain
 #' the same for women.
 #'
-#' @source PAID 4.0 tool
+#' @source PAID4 tool
 #' @format list of length 2. The two objects are called "sc" and "dc" and each
 #'   contains a numeric vector of length 202.
 "related.costs.scdc"

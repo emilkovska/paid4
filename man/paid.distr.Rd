@@ -31,7 +31,8 @@ varies when all parameters vary simultaneously when drawn from their
 distributions. For this purpose, the current function fits several
 distributions on the lifetime healthcare expenditures (LHCE) at each age/sex,
 chooses the distribution with the best AIC fit, and reports back the
-distribution and its parameters.
+distribution and its parameters. The considered distributions are normal,
+lognormal, gamma, weibull, exponential.
 }
 \examples{
 \dontrun{

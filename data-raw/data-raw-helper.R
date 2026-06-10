@@ -563,13 +563,18 @@ getProbDeath  <- function(country) {
   mat <- as.matrix(mat[,c("prob_a_ttd0","prob_a_ttd1","prob_a_ttd2","prob_a_ttd3","prob_a_ttd4")])
   rownames(mat) <- c(paste("Men",0:100,sep=""),paste("Women",0:100,sep=""))
   
-  r <- c(98,99,100,101)
-  r <- c(r, r+101)
+  # Assume at everyone dies at age 101, hence the 5-year probability to die after age 97 is 1.
+  mat[98,5]     <- 1-rowSums(mat[98,,drop=FALSE], na.rm = TRUE)
+  mat[98+101,5] <- 1-rowSums(mat[98+101,,drop=FALSE], na.rm = TRUE)
   
-  for (i in r) {
-    j        <- which(is.na(mat[i,]))
-    mat[i,j] <- (1-rowSums(mat[i,,drop=FALSE], na.rm = TRUE))/length(j)
-  }
+  mat[99,4:5]     <- c((1-rowSums(mat[99,,drop=FALSE], na.rm = TRUE)),0)
+  mat[99+101,4:5] <- c((1-rowSums(mat[99+101,,drop=FALSE], na.rm = TRUE)),0)
+  
+  mat[100,3:5]     <- c((1-rowSums(mat[100,,drop=FALSE], na.rm = TRUE)),0,0)
+  mat[100+101,3:5] <- c((1-rowSums(mat[100+101,,drop=FALSE], na.rm = TRUE)),0,0)
+  
+  mat[101,2:5]     <- c((1-rowSums(mat[101,,drop=FALSE], na.rm = TRUE)),0,0,0)
+  mat[101+101,2:5] <- c((1-rowSums(mat[101+101,,drop=FALSE], na.rm = TRUE)),0,0,0)
   
   mat
   
@@ -698,16 +703,25 @@ getDeathCauseNL <- function() {
   probs <- cbind(df[,c("sex","age")],probs)
   
   # Smooth
-  ncols <- dim(probs)[2]
+  ncols      <- dim(probs)[2]
   nk         <<- 20
   v.age      <<- as.numeric(unique(probs$age))
   df_new     <- as.data.frame(cbind(sex = rep(c("Men","Women"), each = 101), age = 0:100 ,
                                     apply(probs[,3:ncols],2, FUN = function(x) paid4::f.smoothAC(x,inc=1, lastsexage = 21 ) )))
   df_new[,3:ncols] <- apply(df_new[,3:ncols],2,as.numeric)
+
+  # Standardize post smoothing for PAID diseases. All groups from PAID + "Otherca" should equal 1 at all ages, as the causes of death
+  # for the NL is an exhaustive list where diseases + all other possible causes ("Otherca") that are not part of PAID are listed, so that's the total deaths.
+  map <- mapping[["Netherlands"]][[paste(2019)]]
+  names(map)  <- c("code","group","chapter","description","header")
+  disnames    <- unlist(map$code[map$group %in% 1:119])
+  disnames <- apply(sapply(disnames, function(x) {grepl(x,colnames(df_new))}), 2, function(xx) {colnames(df_new)[xx]} )
+  if (is.list(disnames)) {disnames <- do.call(c,disnames)} 
+  disnames <- unique(disnames)
+  sums     <- rowSums(df_new[,disnames]) + df_new[,"Otherca"]
+  df_new[,3:ncol(df_new)] <- apply(df_new[,3:ncol(df_new)],2,FUN = function(x) {x/sums})
   
-  # This is p(x|d=1,a). For PAID equation (5) we need p(x,d=1|a)
-  # Thus, values need to be multiplied by p(d=1|a) [p(nox|d=1,a)*p(d=1|a) = p(nox,d=1|a) == D(nox,a)/N(a)]
-  # This will be done in the renderUnrelSCDC()
+  # This is p(x|d=1,a)
   probDeathCause <- df_new
   
   # Calculate probability to die of a specific chapter | d=1, a,s = pr(chapterX|d=1,a,s). Used to weight the R(NOX) for related diseases.
@@ -962,14 +976,12 @@ cleanPopCounts <- function() {
            age %in% c("Y_LT1",paste("Y",1:99,sep=""), "Y_GE100"),
            !(geo %in% c("EU27_2020", "EA_20","EA20")),
            TIME_PERIOD == "2024-01-01")
-  geo <- c("BE", "BG", "CZ", "DK", "DE", "EE", "IE", "EL", "ES", "FR", "HR", "IT", "CY", "LV", "LT", "LU", "HU" ,
-           "MT", "NL", "AT" ,"PL", "PT", "RO", "SI" ,"SK" ,"FI" ,"SE", "IS" ,"NO" ,"CH")
-  names(geo) <- c("Belgium","Bulgaria","Czechia","Denmark","Germany","Estonia","Ireland","Greece","Spain","France","Croatia","Italy","Cyprus",
+  geo         <- data.frame(geo = c("BE", "BG", "CZ", "DK", "DE", "EE", "IE", "EL", "ES", "FR", "HR", "IT", "CY", "LV", "LT", "LU", "HU" ,
+                                    "MT", "NL", "AT" ,"PL", "PT", "RO", "SI" ,"SK" ,"FI" ,"SE", "IS" ,"NO" ,"CH"),
+                            country = c("Belgium","Bulgaria","Czechia","Denmark","Germany","Estonia","Ireland","Greece","Spain","France","Croatia","Italy","Cyprus",
                   "Latvia","Lithuania",  "Luxembourg","Hungary","Malta", "Netherlands","Austria","Poland","Portugal" ,
-                  "Romania","Slovenia","Slovakia","Finland","Sweden","Iceland","Norway" ,"Switzerland")
-  for (i in 1:nrow(pop)) {
-    pop$country[i] <- names(geo)[pop$geo[i]==geo]
-  }
+                  "Romania","Slovenia","Slovakia","Finland","Sweden","Iceland","Norway" ,"Switzerland"))
+  pop <- merge(pop,geo, by = "geo")
   pop$age[pop$age=="Y_LT1"]   <- "Y0"
   pop$age[pop$age=="Y_GE100"] <- "Y100"
   pop$age <- as.numeric(gsub("Y","",pop$age))
