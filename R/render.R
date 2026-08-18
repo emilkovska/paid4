@@ -466,20 +466,17 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
       rbind(x,repx)
       })
   }
-
   
+  # Adjusts annual LHCE to cycle-specific LHCE - this boils down to finding the LHCE at an interpolated age between Age(cycle=1) and Age(cycle=2)
   if (cycle_length!=1) {
     orig_agevec   <- unique(round(user_agevec))
-    user_agevec   <- user_agevec + cycle_length/2
+    user_agevec   <- user_agevec + cycle_length
     # The original costs consider costs accrued towards the end of the interval.
     # But with a shorter cycle, the start of the interval is needed. For
     # example, with a start_age=20 and 3-week cycle length, the original file
     # will give costs at age 20 of approx 30000. But that 30000 is the costs of
     # the last year of life of a 20-year-old if they'd died at age 20.999.So,
     # starting from age 20 the accrued costs should be 0 (20) to 30000 (20.999).
-    
-    # Half-cycle correction would be finding the LHCE at the age between
-    # interval 1 & interval 2 (thus, xout = user_agevec + cycle_length/2)
     
     # GAMs are used here (and in other helper functions) for smoothing because
     # GAMs do not assume a priori any relationship between the dependent
@@ -499,20 +496,7 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
         pred
       })
     })
-  } else {
-    # Half-cycle correction for 1-year cycle lenghts 
-    costlist <- lapply(sex.vec, function(s) {
-      bindwith <- switch(paste(PSA), "TRUE" = rep(0,psa.N), "FALSE" = rep(0,3))
-      new <- rbind(bindwith,costlist[[s]])
-      new <- (new + dplyr::lead(new))/2
-      new <- stats::na.omit(new)
-      rownames(new) <- user_agevec
-      costlist[[s]] <- new
-    })
-    names(costlist) <- sex.vec
-    t               <- 1:length(start_age:100)
-  }
-
+  } 
   names(costlist) <- sex.vec
 
   # Get sex-weighted costs
@@ -522,6 +506,9 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
   if (justcosts) {
     return(costlist)
   }
+  
+  # Ensure all die after the last cycle
+  survdata[dim(survdata)[1],] <- t(rep(0,dim(survdata)[2]))
 
   # Get survival and number of people dying each cycle
   cohort_f   <- as.data.frame(sapply(c(1,2),function(x) {dplyr::lag(survdata[,x])-survdata[,x]}))
@@ -530,10 +517,21 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
   # Calculate unrelated costs
   coh.output        <- lapply(1:2,function(x) {costlist * cohort_f[,x]})
   names(coh.output) <- colnames(survdata)
+  
+  # Half-cycle correction
+  coh.output <- lapply(coh.output, function(x) {
+    bindwith <- switch(paste(PSA), "TRUE" = rep(0,psa.N), "FALSE" = rep(0,3))
+    x   <- rbind(bindwith,x)
+    x   <- (x + dplyr::lead(x))/2
+    x   <- stats::na.omit(x)
+    rownames(x) <- user_agevec
+    x
+  })
+
 
   return(list(output  = coh.output, # Survival * Discounted, half-cycle corrected, sex-weighted costs
-              wcosts  = costlist,   # Discounted, half-cycle corrected, sex-weighted unrelated costs
-              uwcosts = uwcosts))   # Discounted, half-cycle corrected unrelated costs for men & women separately in the pre-specified cycle length.
+              wcosts  = costlist,   # Discounted, sex-weighted unrelated costs
+              uwcosts = uwcosts))   # Discounted unrelated costs for men & women separately in the pre-specified cycle length.
 }
 
 

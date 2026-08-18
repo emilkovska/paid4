@@ -81,8 +81,8 @@
 #'   If `survdata` is provided, the function returns a list of 
 #'   1) output: Survival times discounted, half-cycle corrected, sex-weighted 
 #'      unrelated costs;
-#'   2) wcosts:  Discounted, half-cycle corrected, sex-weighted unrelated costs;
-#'   3) uwcosts: Discounted, half-cycle corrected unrelated costs for men &
+#'   2) wcosts:  Discounted, sex-weighted unrelated costs;
+#'   3) uwcosts: Discounted unrelated costs for men &
 #'   women separately in the pre-specified cycle length. 
 #'   4) Source year used for costs and presenting prices.
 #'
