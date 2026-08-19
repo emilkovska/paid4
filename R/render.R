@@ -470,7 +470,7 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
   # Adjusts annual LHCE to cycle-specific LHCE - this boils down to finding the LHCE at an interpolated age between Age(cycle=1) and Age(cycle=2)
   if (cycle_length!=1) {
     orig_agevec   <- unique(round(user_agevec))
-    user_agevec   <- user_agevec + cycle_length
+ #   user_agevec   <- user_agevec + cycle_length
     # The original costs consider costs accrued towards the end of the interval.
     # But with a shorter cycle, the start of the interval is needed. For
     # example, with a start_age=20 and 3-week cycle length, the original file
@@ -524,10 +524,11 @@ renderCohort <- function(survdata,costlist, pmen, cycle_length, start_age, justc
     x   <- rbind(bindwith,x)
     x   <- (x + dplyr::lead(x))/2
     x   <- stats::na.omit(x)
-    rownames(x) <- user_agevec
     x
   })
-
+  
+  coh.output[[3]] <- user_agevec
+  names(coh.output)[3] <- "age"
 
   return(list(output  = coh.output, # Survival * Discounted, half-cycle corrected, sex-weighted costs
               wcosts  = costlist,   # Discounted, sex-weighted unrelated costs
