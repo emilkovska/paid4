@@ -98,7 +98,7 @@ paid <- function(country = c("Netherlands","Germany","France","Greece","Spain","
 
   ##### Validate Country choice ####
   country <- match.arg(tolower(country), choices = tolower(c("Netherlands","Germany","France","Greece","Spain","United Kingdom")))
-  country <- paste(toupper(substr(country, 1, 1)), substr(country, 2, nchar(country)), sep="")
+  country <- tools::toTitleCase(country)
   
   ##### Validate COI year choice and set defaults ####
   options <- list(

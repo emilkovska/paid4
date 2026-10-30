@@ -20,6 +20,7 @@ Imports:
     mgcv,
     stringr,
     utils, 
+    tools,
     MASS
 Suggests: 
     readxl,
